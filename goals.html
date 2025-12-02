@@ -1,0 +1,317 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>실시간 요금</title>
+  <link rel="stylesheet" href="style.css" />
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@latest/dist/web/variable/pretendardvariable-dynamic-subset.css" />
+  <!-- 환경 주입 -->
+  <script src="env.js"></script>
+</head>
+<body data-page="goals">
+  <div class="wrap">
+    <header>
+      <div class="top-bar">
+        <div class="time">--:--</div>
+        <div class="status" aria-hidden="true"><span>📶</span><span>📡</span><span>🔋</span></div>
+      </div>
+      <div class="top-actions">
+        <a class="btn" href="log.html">로그</a>
+        <div>
+          <a class="icon-btn" href="alerts.html" aria-label="알림">🔔</a>
+          <a class="icon-btn" href="search.html" aria-label="검색">🔎</a>
+          <button class="icon-btn" id="openDrawer" aria-label="전체 메뉴">🧭</button>
+        </div>
+      </div>
+    </header>
+
+    <main class="section stack">
+      <section class="panel">
+        <h3>절약 목표 한눈에 파악하기</h3>
+
+        <!-- 절약 목표 카드 -->
+        <div class="goal-card">
+          <div class="goal-head" style="display:flex;justify-content:space-between;align-items:flex-start;gap:10px;">
+            <h3 class="goal-title" style="white-space:nowrap;margin:0;">이번 달 절약 목표</h3>
+            <div class="goal-side" style="display:flex;flex-direction:column;align-items:flex-end;line-height:1.2;">
+              <span class="goal-meta" style="white-space:nowrap;">목표: <span id="goalTarget">- 원</span></span>
+              <span class="goal-meta" style="white-space:nowrap;">남은 금액 <span id="goalRemain">- 원</span></span>
+            </div>
+          </div>
+
+          <div class="progress">
+            <div class="progress-track"><div id="goalFill" class="progress-fill" style="width:0%"></div></div>
+            <div class="progress-label">
+              <span id="savedNow">이번 달 절감액: - 원</span>
+              <span id="goalPct">0%</span>
+            </div>
+          </div>
+          <form class="goal-form" id="goalForm">
+            <input id="goalInput" class="input" type="number" min="0" step="1000" placeholder="목표 금액 (예: 50000)" />
+            <div class="goal-actions">
+              <button type="submit" class="btn">저장</button>
+              <button type="button" id="goalClear" class="btn">초기화</button>
+            </div>
+          </form>
+        </div>
+
+        <!-- 근처 유저 비교 -->
+        <section class="neighbor-note">
+          <p class="neighbor-title">
+            근처 유저 중 <strong class="hl">@@님</strong>은 에너지 절약 성공률
+            <strong class="hl" id="rankTopText">상위 -%예요!</strong>
+          </p>
+          <div class="mini-colchart" aria-label="근처 유저 비교 그래프">
+            <div class="col self"   id="colSelf"   style="--h:0%"><span class="val" id="selfVal">0%</span><span class="lab">나</span></div>
+            <div class="col others" id="colOthers" style="--h:0%"><span class="val" id="avgVal">0%</span><span class="lab" id="areaLab">지역 평균</span></div>
+          </div>
+        </section>
+
+        <!-- 종목별 목표 설정금액 달성률 -->
+        <section class="cat-goals">
+          <div class="goal-line" data-cat="elec" data-now="0" data-target="1">
+            <div class="gl-head">
+              <div class="label">⚡ 전기</div>
+              <div class="val nowrap"><span class="now">0</span> / <span class="target">0</span> 원</div>
+            </div>
+            <div class="gl-meter"><div class="gl-fill"></div></div>
+            <div class="gl-pct nowrap">0%</div>
+          </div>
+
+          <div class="goal-line" data-cat="gas" data-now="0" data-target="1">
+            <div class="gl-head">
+              <div class="label">🔥 가스</div>
+              <div class="val nowrap"><span class="now">0</span> / <span class="target">0</span> 원</div>
+            </div>
+            <div class="gl-meter"><div class="gl-fill"></div></div>
+            <div class="gl-pct nowrap">0%</div>
+          </div>
+        </section>
+      </section>
+    </main>
+
+    <footer>
+      <div class="tabs">
+        <a class="tab" href="index.html">홈</a>
+        <a class="tab" href="analysis.html">AI</a>
+        <a class="tab active" href="goals.html">요금</a>
+        <a class="tab" href="profile.html">마이</a>
+        <button class="tab" id="openDrawer2" type="button">전체</button>
+      </div>
+    </footer>
+  </div>
+
+  <div class="scrim" id="scrim"></div>
+  <aside class="drawer" id="drawer" aria-label="전체 메뉴">
+    <div class="d-hero">
+      <div class="d-avatar">👤</div>
+      <div><div class="d-name">@@님</div><div class="d-email">aaa123@gmail.com</div></div>
+    </div>
+    <div class="d-grid">
+      <a class="d-btn" href="profile.html"><div class="emoji">👤</div><div class="label">정보 관리</div></a>
+      <a class="d-btn" href="alerts.html"><div class="emoji">🔔</div><div class="label">알림</div></a>
+      <a class="d-btn" href="#"><div class="emoji">📢</div><div class="label">공지사항</div></a>
+      <a class="d-btn" href="profile.html"><div class="emoji">👤</div><div class="label">마이페이지</div></a>
+      <a class="d-btn" href="#"><div class="emoji">💬</div><div class="label">고객센터</div></a>
+      <a class="d-btn" href="search.html"><div class="emoji">🔎</div><div class="label">검색</div></a>
+    </div>
+    <div class="d-hr"></div>
+    <div class="d-actions"><a href="#">로그아웃</a><a href="#">탈퇴하기</a></div>
+  </aside>
+
+  <!-- 숫자 포맷 & 진행바 계산(레이아웃 변경 없음) -->
+    <!-- 목표 라인 공통 UI 함수 (기존 그대로 사용) -->
+  <script>
+    function fillGoalLine(row, now, target){
+      const fmt = new Intl.NumberFormat('ko-KR');
+      now = Number(now||0); target = Math.max(1, Number(target||0));
+      const pct = Math.min(100, Math.round((now/target)*1000)/10);
+      row.dataset.now = String(now); row.dataset.target = String(target);
+      row.querySelector('.now').textContent = fmt.format(now);
+      row.querySelector('.target').textContent = fmt.format(target);
+      row.querySelector('.gl-pct').textContent = pct + '%';
+      row.querySelector('.gl-fill').style.width = pct + '%';
+    }
+  </script>
+
+  <!-- 실시간 요금: 로컬 버전 (API 호출 X) -->
+  <script>
+    (function () {
+      const fmt = new Intl.NumberFormat('ko-KR');
+      const now = new Date();
+      const ym = now.getFullYear() + '-' + String(now.getMonth() + 1).padStart(2, '0');
+      const STORAGE_KEY = 'goalsPage.' + ym;
+
+      function loadState() {
+        try {
+          return JSON.parse(localStorage.getItem(STORAGE_KEY) || '{}');
+        } catch (e) {
+          return {};
+        }
+      }
+
+      function saveState(st) {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(st));
+      }
+
+      // 입력한 "이번 달 절약 목표 금액" 기준으로 전체 상태 계산
+      function calcFromGoal(goalRaw) {
+        const goal = Math.max(0, Number(goalRaw) || 0);
+
+        // 목표가 있으면 그 중 60% 정도는 이미 절감했다고 가정
+        const saved = goal > 0 ? Math.round(goal * 0.6) : 0;
+        const remain = Math.max(0, goal - saved);
+        const savingPercent = goal > 0 ? Math.round((saved / goal) * 1000) / 10 : 0;
+
+        // 전기/가스 목표를 6:4 비율로 나눔
+        const elecTarget = Math.round(goal * 0.6);
+        const gasTarget  = Math.max(0, goal - elecTarget);
+
+        // 실제 사용량은 목표의 일부라고 가정 (전기 70%, 가스 50%)
+        const elecNow = Math.round(elecTarget * 0.7);
+        const gasNow  = Math.round(gasTarget  * 0.5);
+
+        // 랭킹/비교용 더미 데이터
+        const myRate = Math.max(0, Math.min(100, savingPercent));
+        const areaAvgRate = myRate > 0
+          ? Math.max(0, Math.min(100, myRate - 10))   // 나보다 조금 낮게
+          : 40;                                       // 기본값 40%
+        const topPercent = Math.max(1, Math.min(99, Math.round(100 - myRate)));
+
+        return {
+          goalWon: goal,
+          remainingWon: remain,
+          savedWon: saved,
+          savingPercent,
+          cat: {
+            elec: { used: elecNow, target: elecTarget },
+            gas:  { used: gasNow,  target: gasTarget }
+          },
+          ranking: {
+            myRate,
+            areaAvgRate,
+            topPercent,
+            area: '내 주변'
+          }
+        };
+      }
+
+      function render(state) {
+        const goal   = Math.max(0, Number(state.goalWon || 0));
+        const remain = Math.max(0, Number(state.remainingWon || 0));
+        const saved  = Math.max(0, Number(state.savedWon || 0));
+        const percent = Math.max(0, Math.min(100, Number(state.savingPercent || 0)));
+        const hasGoal = goal > 0;
+
+        const goalTarget = document.getElementById('goalTarget');
+        const goalRemain = document.getElementById('goalRemain');
+        const savedNow   = document.getElementById('savedNow');
+        const goalPct    = document.getElementById('goalPct');
+        const goalFill   = document.getElementById('goalFill');
+        const input      = document.getElementById('goalInput');
+
+        if (goalTarget) goalTarget.textContent = fmt.format(goal) + ' 원';
+        if (goalRemain) goalRemain.textContent = fmt.format(remain) + ' 원';
+        if (savedNow)   savedNow.textContent   = '이번 달 절감액: ' + fmt.format(saved) + ' 원';
+        if (goalPct)    goalPct.textContent    = (Math.round(percent * 10) / 10).toString().replace(/\.0$/, '') + '%';
+        if (goalFill)   goalFill.style.width   = percent + '%';
+        if (input)      input.value            = goal ? String(goal) : '';
+
+        // 랭킹 / 근처 유저 비교
+        const r = state.ranking || {};
+        const self = Math.max(0, Math.min(100, Number(r.myRate || 0)));
+        const avg  = Math.max(0, Math.min(100, Number(r.areaAvgRate || 0)));
+        const top  = Math.max(1, Math.min(99, Number(r.topPercent || 0)));
+
+        const rankTopText = document.getElementById('rankTopText');
+        const colSelf     = document.getElementById('colSelf');
+        const selfVal     = document.getElementById('selfVal');
+        const colOthers   = document.getElementById('colOthers');
+        const avgVal      = document.getElementById('avgVal');
+        const areaLab     = document.getElementById('areaLab');
+
+        if (rankTopText) {
+          if (hasGoal) {
+            rankTopText.textContent = '상위 ' + top + '%예요!';
+          } else {
+            rankTopText.textContent = '절약 목표를 설정해 보세요!';
+          }
+        }
+        if (colSelf)   colSelf.style.setProperty('--h', self + '%');
+        if (selfVal)   selfVal.textContent = self.toFixed(0) + '%';
+        if (colOthers) colOthers.style.setProperty('--h', avg + '%');
+        if (avgVal)    avgVal.textContent = avg.toFixed(0) + '%';
+        if (areaLab)   areaLab.textContent = (r.area || '내 주변') + ' 유저';
+
+        // 종목별 목표 그래프 (전기/가스)
+        const byCat = state.cat || {};
+        document.querySelectorAll('.goal-line').forEach((row) => {
+          if (!hasGoal) {
+            row.dataset.now = '0';
+            row.dataset.target = '0';
+            row.querySelector('.now').textContent = '0';
+            row.querySelector('.target').textContent = '0';
+            row.querySelector('.gl-pct').textContent = '0%';
+            row.querySelector('.gl-fill').style.width = '0%';
+            return;
+          }
+          const cat = row.dataset.cat;
+          const d = byCat[cat];
+          if (!d) {
+            fillGoalLine(row, 0, 1);
+            return;
+          }
+          fillGoalLine(row, Number(d.used || 0), Number(d.target || 1));
+        });
+      }
+
+      function applyAndSaveFromGoalInput(rawGoal) {
+        const computed = calcFromGoal(rawGoal);
+        saveState(computed);
+        render(computed);
+      }
+
+      document.addEventListener('DOMContentLoaded', () => {
+        // 초기 상태 로드
+        let st = loadState();
+        if (st.goalWon == null) {
+          st = calcFromGoal(0);
+          saveState(st);
+        }
+        render(st);
+
+        // "저장" 버튼
+        document.getElementById('goalForm')?.addEventListener('submit', (e) => {
+          e.preventDefault();
+          const input = document.getElementById('goalInput');
+          const val = Math.max(0, Number(input?.value || 0));
+          applyAndSaveFromGoalInput(val);
+        });
+
+        // "초기화" 버튼
+        document.getElementById('goalClear')?.addEventListener('click', () => {
+          const st0 = calcFromGoal(0);
+          saveState(st0);
+          render(st0);
+        });
+      });
+    })();
+  </script>
+
+  <!-- 전체 메뉴 드로어 (기존 그대로) -->
+  <script>
+    (function(){
+      const d=document, dr=d.getElementById('drawer'), sc=d.getElementById('scrim');
+      const open=()=>{dr.classList.add('open'); sc.classList.add('show');};
+      const close=()=>{dr.classList.remove('open'); sc.classList.remove('show');};
+      d.getElementById('openDrawer')?.addEventListener('click', open);
+      d.getElementById('openDrawer2')?.addEventListener('click', open);
+      sc.addEventListener('click', close);
+      d.addEventListener('keydown', e=>{ if(e.key==='Escape') close(); });
+      d.addEventListener('DOMContentLoaded', close);
+    })();
+  </script>
+
+</body>
+</html>

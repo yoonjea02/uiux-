@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>그린루틴 · 온보딩</title>
+  <style>
+    html, body { height: 100%; }
+    body {
+      margin: 0;
+      overflow: hidden;
+      background: #fff;
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    }
+
+    .sr-only {
+      position: absolute;
+      width: 1px;
+      height: 1px;
+      padding: 0;
+      margin: -1px;
+      overflow: hidden;
+      clip: rect(0, 0, 0, 0);
+      white-space: nowrap;
+      border: 0;
+    }
+
+    .splash {
+      position: fixed;
+      inset: 0;
+      width: 400px;
+      height: 100vh;
+      margin: 0 auto;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      background: url("그린루틴 전체화면.jpg") center / cover no-repeat;
+    }
+  </style>
+</head>
+<body data-page="splash">
+  <header class="sr-only">
+    <h1>그린루틴 온보딩 화면</h1>
+  </header>
+
+  <main>
+    <div class="splash" role="img" aria-label="그린루틴 온보딩 이미지"></div>
+  </main>
+
+  <footer class="sr-only">
+    <p>잠시 후 메인 화면으로 이동합니다.</p>
+  </footer>
+
+  <script>
+    setTimeout(function () {
+      window.location.replace("home.html");
+    }, 3000);
+  </script>
+</body>
+</html>

@@ -1,0 +1,124 @@
+search
+
+
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>검색</title>
+  <link rel="stylesheet" href="style.css" />
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@latest/dist/web/variable/pretendardvariable-dynamic-subset.css" />
+
+</head>
+<body data-page="search">
+  <div class="wrap">
+    <!-- Header -->
+    <header>
+      <div class="top-bar">
+        <div class="time">--:--</div>
+        <div class="status" aria-hidden="true"><span>📶</span><span>📡</span><span>🔋</span></div>
+      </div>
+      <div class="top-actions">
+        <a class="btn" href="index.html">홈</a>
+        <div>
+          <a class="icon-btn" href="alerts.html" aria-label="알림">🔔</a>
+          <a class="icon-btn" href="search.html" aria-label="검색">🔎</a>
+          <button class="icon-btn" id="openDrawer" aria-label="전체 메뉴">🧭</button>
+        </div>
+      </div>
+    </header>
+
+    <!-- Main -->
+    <main class="section stack">
+      <section class="panel">
+        <div class="input-group">
+          <span class="left-addon">🔎</span>
+          <input class="input full" type="text" placeholder="검색어를 입력하세요 (예: 전기 절약)" />
+        </div>
+        <div class="chip-row" style="margin-top:8px">
+          <button class="chip">누수 감지</button>
+          <button class="chip">대기전력</button>
+          <button class="chip">여름 전기요금</button>
+          <button class="chip">한달 관리비</button>
+        </div>
+      </section>
+
+      <section class="panel">
+        <h3>추천</h3>
+        <p class="small">🔎 검색 결과가 여기에 표시됩니다</p>
+        <div class="links small">
+          <a href="log.html">최근 로그</a> ·
+          <a href="alerts.html">알림 센터</a> ·
+          <a href="goals.html">요금 대시보드</a> ·
+          <a href="profile.html">마이페이지</a>
+        </div>
+      </section>
+    </main>
+
+    <!-- Tabs -->
+    <footer>
+      <div class="tabs">
+        <a class="tab" href="index.html">홈</a>
+        <a class="tab" href="analysis.html">AI</a>
+        <a class="tab" href="goals.html">요금</a>
+        <a class="tab" href="profile.html">마이</a>
+        <button class="tab" id="openDrawer2" type="button">전체</button>
+      </div>
+    </footer>
+  </div>
+
+  <!-- Drawer (공통) -->
+  <div class="scrim" id="scrim"></div>
+  <aside class="drawer" id="drawer" aria-label="전체 메뉴">
+    <div class="d-hero">
+      <div class="d-avatar">👤</div>
+      <div><div class="d-name">@@@님</div><div class="d-email">aaa123@gmail.com</div></div>
+    </div>
+    <div class="d-grid">
+      <a class="d-btn" href="profile.html"><div class="emoji">👤</div><div class="label">정보 관리</div></a>
+      <a class="d-btn" href="alerts.html"><div class="emoji">🔔</div><div class="label">알림</div></a>
+      <a class="d-btn" href="#"><div class="emoji">📢</div><div class="label">공지사항</div></a>
+      <a class="d-btn" href="profile.html"><div class="emoji">👤</div><div class="label">마이페이지</div></a>
+      <a class="d-btn" href="#"><div class="emoji">💬</div><div class="label">고객센터</div></a>
+      <a class="d-btn" href="search.html"><div class="emoji">🔎</div><div class="label">검색</div></a>
+    </div>
+    <div class="d-hr"></div>
+    <div class="d-actions"><a href="#">로그아웃</a><a href="#">탈퇴하기</a></div>
+  </aside>
+
+  <!-- Drawer script -->
+  <script>
+    (function(){
+      const d=document, dr=d.getElementById('drawer'), sc=d.getElementById('scrim');
+      const open=()=>{dr.classList.add('open'); sc.classList.add('show');};
+      const close=()=>{dr.classList.remove('open'); sc.classList.remove('show');};
+      d.getElementById('openDrawer')?.addEventListener('click', open);
+      d.getElementById('openDrawer2')?.addEventListener('click', open);
+      sc.addEventListener('click', close);
+      d.addEventListener('keydown', e=>{ if(e.key==='Escape') close(); });
+      d.addEventListener('DOMContentLoaded', close);
+    })();
+  </script>
+  
+    <!-- 순수 DOM 스크립트: 칩 클릭 시 검색어 자동 채우기 -->
+  <script>
+    document.addEventListener('DOMContentLoaded', function () {
+      var input = document.querySelector('.input.full');
+      var chips = document.querySelectorAll('.chip');
+
+      if (!input || !chips.length) return;
+
+      chips.forEach(function (chip) {
+        chip.addEventListener('click', function () {
+          input.value = chip.textContent.trim();
+          input.focus();
+        });
+      });
+    });
+  </script>
+</body>
+</html>
+
+</body>
+</html>

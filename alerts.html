@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>알림</title>
+  <link rel="stylesheet" href="style.css" />
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@latest/dist/web/variable/pretendardvariable-dynamic-subset.css" />
+  <script src="env.js"></script>
+
+  <!-- alerts 전용 살짝 스타일(레이아웃 영향 없음) -->
+  <style>
+    body[data-page="alerts"] .list-item .title{ font-size: var(--fs-14); font-weight: 800; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; letter-spacing: -0.2px; line-height: 1.25; display:inline-block; max-width: 100%; }
+    body[data-page="alerts"] .badge{ border:none!important; border-radius:9999px!important; padding:6px 12px!important; font-size:var(--fs-12)!important; line-height:1!important; box-shadow: inset 0 0 0 1px rgba(0,0,0,.04), 0 2px 6px rgba(15,23,42,.06); }
+    body[data-page="alerts"] .badge.info{ background: rgba(59,130,246,.14)!important; color:#0ea5e9!important; }
+    body[data-page="alerts"] .badge.warn{ background: rgba(234,88,12,.14)!important;  color:#f97316!important; }
+    body[data-page="alerts"] .list-item > div:nth-of-type(2){ padding-left: 8px; }
+  </style>
+</head>
+<body data-page="alerts">
+  <div class="wrap">
+    <header>
+      <div class="top-bar">
+        <div class="time">--:--</div>
+        <div class="status" aria-hidden="true"><span>📶</span><span>📡</span><span>🔋</span></div>
+      </div>
+      <div class="top-actions">
+        <a class="btn" href="index.html">홈</a>
+        <div>
+          <a class="icon-btn" href="alerts.html" aria-label="알림">🔔</a>
+          <a class="icon-btn" href="search.html" aria-label="검색">🔎</a>
+          <button class="icon-btn" id="openDrawer" aria-label="전체 메뉴">🧭</button>
+        </div>
+      </div>
+    </header>
+
+    <main class="section stack">
+      <div class="list" id="alertList">
+        <!-- 기존 예시 2개 유지: 새 알림은 위에 prepend 됩니다 -->
+        <article class="list-item">
+          <div class="icon">🔔</div>
+          <div>
+            <div><strong class="title">대기전력 절감: 멀티탭 스케줄 OFF 추천</strong></div>
+            <div class="small">2일 전 · 절약 팁</div>
+          </div>
+          <span class="badge info">팁</span>
+        </article>
+
+        <article class="list-item">
+          <div class="icon">🔔</div>
+          <div>
+            <div><strong class="title">센서 연결 상태가 잠시 불안정</strong></div>
+            <div class="small">3일 전 · 시스템</div>
+          </div>
+          <span class="badge warn">알림</span>
+        </article>
+      </div>
+
+      <section class="stats-card">
+        <h3 style="margin:0 0 10px">이번 달 알림 통계</h3>
+        <div class="stat-grid">
+          <div class="stat"><div class="emoji">🔔</div><div class="value">6</div><div class="label">전체</div></div>
+          <div class="stat"><div class="emoji">✅</div><div class="value">5</div><div class="label">확인</div></div>
+          <div class="stat"><div class="emoji">⚠️</div><div class="value">2</div><div class="label">주의</div></div>
+          <div class="stat"><div class="emoji">💡</div><div class="value">4</div><div class="label">절약 팁</div></div>
+          <div class="stat"><div class="emoji">ℹ️</div><div class="value">0</div><div class="label">안내</div></div>
+        </div>
+      </section>
+    </main>
+
+    <footer>
+      <div class="tabs">
+        <a class="tab" href="index.html">홈</a>
+        <a class="tab" href="analysis.html">AI</a>
+        <a class="tab" href="goals.html">요금</a>
+        <a class="tab" href="profile.html">마이</a>
+        <button class="tab" id="openDrawer2" type="button">전체</button>
+      </div>
+    </footer>
+  </div>
+
+  <!-- Drawer -->
+  <div class="scrim" id="scrim"></div>
+  <aside class="drawer" id="drawer" aria-label="전체 메뉴">
+    <div class="d-hero">
+      <div class="d-avatar">👤</div>
+      <div><div class="d-name">@@님</div><div class="d-email">aaa123@gmail.com</div></div>
+    </div>
+    <div class="d-grid">
+      <a class="d-btn" href="profile.html"><div class="emoji">👤</div><div class="label">정보 관리</div></a>
+      <a class="d-btn" href="alerts.html"><div class="emoji">🔔</div><div class="label">알림</div></a>
+      <a class="d-btn" href="#"><div class="emoji">📢</div><div class="label">공지사항</div></a>
+      <a class="d-btn" href="profile.html"><div class="emoji">👤</div><div class="label">마이페이지</div></a>
+      <a class="d-btn" href="#"><div class="emoji">💬</div><div class="label">고객센터</div></a>
+      <a class="d-btn" href="search.html"><div class="emoji">🔎</div><div class="label">검색</div></a>
+    </div>
+    <div class="d-hr"></div>
+    <div class="d-actions"><a href="#">로그아웃</a><a href="#">탈퇴하기</a></div>
+  </aside>
+
+  <!-- API 연결 -->
+  <script>
+    (function(){
+      const { API_ORIGIN='', USER_ID } = window.__ENV;
+
+      // 미읽음 카운트 → 알림 아이콘 배지
+      async function paintBellUnread() {
+        try {
+          const res = await fetch(`${API_ORIGIN}/api/alerts/unread-count?userId=${USER_ID}`);
+          if (!res.ok) return;
+          const count = await res.json(); // 숫자
+          const bell = document.querySelector('.top-actions a[aria-label="알림"]');
+          if (!bell) return;
+          bell.querySelector('.bell-badge')?.remove();
+          if (count > 0) {
+            const badge = document.createElement('span');
+            badge.className = 'bell-badge';
+            Object.assign(badge.style, { position:'absolute', top:'-4px', right:'-4px', minWidth:'16px', height:'16px', padding:'0 4px', borderRadius:'999px', background:'#ef4444', color:'#fff', fontSize:'11px', lineHeight:'16px', textAlign:'center', boxShadow:'0 1px 2px rgba(0,0,0,.2)' });
+            badge.textContent = String(count);
+            bell.style.position = 'relative';
+            bell.appendChild(badge);
+          }
+        } catch {}
+      }
+
+      // SSE 구독
+      function initSSE(){
+        if (document.body.dataset.page !== 'alerts') return;
+        const list = document.getElementById('alertList');
+        const es = new EventSource(`${API_ORIGIN}/api/alerts/stream?userId=${USER_ID}`);
+
+        function escapeHtml(s){return String(s).replace(/[&<>"']/g, c=>({ '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;' }[c]));}
+
+        es.addEventListener('connected', ()=>console.log('SSE connected'));
+        es.addEventListener('alert', (e)=>{
+          try{
+            const a = JSON.parse(e.data);
+            const levelToClass = { INFO:'info', WARN:'warn', CRIT:'warn' };
+            const when = a.at ? new Date(a.at).toLocaleString() : '방금 전';
+            const item = document.createElement('article');
+            item.className = 'list-item';
+            item.innerHTML = `
+              <div class="icon">🔔</div>
+              <div>
+                <div><strong class="title">${escapeHtml(a.title||'알림')}</strong></div>
+                <div class="small">${when} · ${escapeHtml(a.category||'알림')}</div>
+              </div>
+              <span class="badge ${levelToClass[a.level]||'info'}">${escapeHtml(a.level||'INFO')}</span>
+            `;
+            list?.prepend(item);
+            paintBellUnread();
+          }catch(err){ console.warn('alert payload parse fail', err); }
+        });
+        es.onerror = e => console.warn('SSE error', e);
+      }
+
+      document.addEventListener('DOMContentLoaded', ()=>{ paintBellUnread(); initSSE(); });
+    })();
+  </script>
+
+  <!-- Drawer script -->
+  <script>
+    (function(){
+      const d=document, dr=d.getElementById('drawer'), sc=d.getElementById('scrim');
+      const open=()=>{dr.classList.add('open'); sc.classList.add('show');};
+      const close=()=>{dr.classList.remove('open'); sc.classList.remove('show');};
+      d.getElementById('openDrawer')?.addEventListener('click', open);
+      d.getElementById('openDrawer2')?.addEventListener('click', open);
+      sc.addEventListener('click', close);
+      d.addEventListener('keydown', e=>{ if(e.key==='Escape') close(); });
+      d.addEventListener('DOMContentLoaded', close);
+    })();
+  </script>
+
+    <!-- jQuery 라이브러리 -->
+  <script src="https://code.jquery.com/jquery-3.7.1.min.js"
+          integrity="sha256-3gJwYp4gkYt+ZjvZKX0vM66Q6VVoP1p2u5r9XH7rQ4A="
+          crossorigin="anonymous"></script>
+
+  <!-- jQuery 전용 스크립트: DOM 코드와 분리 -->
+  <script>
+    $(function () {
+      // 가장 최근 알림(첫 번째)을 '새 알림'으로 강조
+      $('#alertList .list-item').first().addClass('is-new');
+
+      // 배지를 클릭하면 읽음/안읽음 상태 토글
+      $('#alertList').on('click', '.badge', function () {
+        $(this).closest('.list-item').toggleClass('is-read');
+      });
+    });
+  </script>
+</body>
+</html>
+
+</body>
+</html>

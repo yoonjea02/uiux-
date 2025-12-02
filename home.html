@@ -1,0 +1,621 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>관리 요금 예측 · 홈</title>
+  <link rel="stylesheet" href="style.css" />
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@latest/dist/web/variable/pretendardvariable-dynamic-subset.css" />
+
+  <!-- (옵션) 라인/막대 영역 레이아웃 보정 -->
+  <style>
+    body[data-page="home"] { touch-action: pan-y; }
+    body[data-page="home"] .wrap { overflow-x: hidden; }
+
+    /* “예상 관리 요금 한눈에” 섹션만 가로 스크롤 */
+    body[data-page="home"] section.panel[aria-label="예상 관리 요금 한눈에"]{ overflow: hidden; }
+    body[data-page="home"] section.panel[aria-label="예상 관리 요금 한눈에"] .cards{
+      display: flex !important;
+      width: 100%;
+      gap: 12px;
+      overflow-x: auto;
+      -webkit-overflow-scrolling: touch;
+      touch-action: pan-x;
+      overscroll-behavior-x: contain;
+      scroll-snap-type: x mandatory;
+      padding-bottom: 4px;
+    }
+    body[data-page="home"] section.panel[aria-label="예상 관리 요금 한눈에"] .cards > .card{
+      flex: 0 0 100%;
+      max-width: 100%;
+      scroll-snap-align: start;
+    }
+
+    /* 막대 차트를 그릴 컨테이너 */
+    .chart-line { position: relative; min-height: 200px; }
+  </style>
+</head>
+<body data-page="home">
+  <div class="wrap">
+
+    <!-- Header -->
+    <header>
+      <div class="top-bar">
+        <div class="time">19:30</div>
+        <div class="status" aria-hidden="true"><span>📶</span><span>📡</span><span>🔋</span></div>
+      </div>
+      <div class="top-actions">
+        <a class="btn" href="log.html" aria-label="로그">로그</a>
+        <div>
+          <a class="icon-btn" href="alerts.html" aria-label="알림">🔔</a>
+          <a class="icon-btn" href="search.html" aria-label="검색">🔎</a>
+          <button class="icon-btn" id="openDrawer" aria-label="전체 메뉴">🧭</button>
+        </div>
+      </div>
+    </header>
+
+    <!-- Main -->
+    <main class="section stack">
+      <!-- 프로필 -->
+        <div class="hero" aria-label="프로필">
+    <span class="hero-badge">BETA</span>
+    <div class="avatar" aria-hidden="true">👤</div>
+    <div>
+        <div class="name">@@님</div>
+        <div class="email">aaa123@gmail.com</div>
+    </div>
+    </div>
+
+
+      <!-- 월 요약 -->
+      <section class="summary" aria-label="이달 관리 요금 요약">
+        <h2>@@님의 <span id="summaryMonth">이번 달</span> 예상 관리 요금 <span class="kpi" id="totalPrice">0 원</span></h2>
+        <p class="small" id="deltaText">비교 데이터를 불러오는 중…</p>
+        <div class="bars">
+          <div class="bar">
+            <span class="label">지난달</span>
+            <div class="track"><div class="fill july" id="barJuly" style="width:50%"></div></div>
+          </div>
+          <div class="bar">
+            <span class="label">이번달</span>
+            <div class="track"><div class="fill aug" id="barAug" style="width:50%"></div></div>
+          </div>
+        </div>
+      </section>
+
+      <!-- 카드: 전기/가스 -->
+      <section class="panel" aria-label="예상 관리 요금 한눈에">
+        <h3 style="margin:0 0 12px">예상 관리 요금 한눈에 모아보기 &gt;</h3>
+        <div class="cards">
+          <article class="card" aria-label="전기">
+            <div class="label">⚡ 예상 전기 요금</div>
+            <div class="kpi" id="elecPrice">0 원</div>
+            <div class="donut" id="donutElec" style="--percent:0"><div class="center">전기 비중</div></div>
+          </article>
+          <article class="card" aria-label="가스">
+            <div class="label">🔥 예상 가스 요금</div>
+            <div class="kpi" id="gasPrice">0 원</div>
+            <div class="donut" id="donutGas" style="--percent:0"><div class="center">가스 비중</div></div>
+          </article>
+        </div>
+      </section>
+
+      <!-- 누적 막대차트 -->
+      <section class="panel">
+        <h3>이번 달 전기/가스 누적</h3>
+        <div id="chartBars" class="chart-line"></div>
+      </section>
+
+      <!-- 절약 목표 -->
+      <section class="goal-card" aria-label="절약 목표">
+        <div class="goal-head">
+          <h3 class="goal-title">이번 달 절약 목표</h3>
+          <span id="goalHint" class="goal-meta">목표를 설정해 진행률을 확인해 보세요</span>
+        </div>
+
+        <div class="progress">
+          <div class="progress-track"><div id="goalFill" class="progress-fill"></div></div>
+          <div class="progress-label">
+            <span id="savedNow">이번 달 절감액: 0 원</span>
+            <span id="goalPct">0%</span>
+          </div>
+        </div>
+
+        <form class="goal-form" id="goalForm">
+          <input id="goalInput" class="input" type="number" min="0" step="1000" placeholder="목표 금액을 입력하세요 (예: 30000)" />
+          <button type="submit" class="btn">저장</button>
+          <button type="button" id="goalClear" class="btn">초기화</button>
+        </form>
+
+        <div id="goalSuccess" style="display:none">
+          <span class="badge-success">목표 달성!</span>
+        </div>
+      </section>
+    </main>
+
+    <!-- Footer Tabs -->
+    <footer>
+      <div class="tabs" aria-label="탭">
+        <a class="tab active" href="home.html" aria-label="홈">홈</a>
+        <a class="tab" href="analysis.html" aria-label="AI 분석">AI</a>
+        <a class="tab" href="goals.html" aria-label="실시간 요금">요금</a>
+        <a class="tab" href="profile.html" aria-label="마이페이지">마이</a>
+        <button class="tab" id="openDrawer2" type="button" aria-label="전체">전체</button>
+      </div>
+    </footer>
+  </div>
+
+  <!-- Drawer (공통) -->
+  <div class="scrim" id="scrim"></div>
+  <aside class="drawer" id="drawer" aria-label="전체 메뉴">
+    <div class="d-hero">
+      <div class="d-avatar">👤</div>
+      <div>
+        <div class="d-name">@@님</div>
+        <div class="d-email">aaa123@gmail.com</div>
+      </div>
+    </div>
+
+    <div class="d-grid">
+      <a class="d-btn" href="profile.html"><div class="emoji">👤</div><div class="label">정보 관리</div></a>
+      <a class="d-btn" href="alerts.html"><div class="emoji">🔔</div><div class="label">알림</div></a>
+      <a class="d-btn" href="#"><div class="emoji">📢</div><div class="label">공지사항</div></a>
+      <a class="d-btn" href="profile.html"><div class="emoji">👤</div><div class="label">마이페이지</div></a>
+      <a class="d-btn" href="#"><div class="emoji">💬</div><div class="label">고객센터</div></a>
+      <a class="d-btn" href="search.html"><div class="emoji">🔎</div><div class="label">검색</div></a>
+    </div>
+
+    <div class="d-hr"></div>
+    <div class="d-actions">
+      <a href="#">로그아웃</a>
+      <a href="#">탈퇴하기</a>
+    </div>
+  </aside>
+
+  <!-- Scripts -->
+  <script src="app3.js" defer></script>
+
+  <!-- Drawer 열고/닫기 -->
+  <script>
+    (function(){
+      const d=document, dr=d.getElementById('drawer'), sc=d.getElementById('scrim');
+      if(!dr || !sc) return;
+      const open=()=>{ dr.classList.add('open'); sc.classList.add('show'); };
+      const close=()=>{ dr.classList.remove('open'); sc.classList.remove('show'); };
+      d.getElementById('openDrawer')?.addEventListener('click', open);
+      d.getElementById('openDrawer2')?.addEventListener('click', open);
+      sc.addEventListener('click', close);
+      d.addEventListener('keydown', e=>{ if(e.key==='Escape') close(); });
+      d.addEventListener('DOMContentLoaded', close);
+    })();
+  </script>
+
+  <!-- ✅ 공통 환경값 (주소/사용자) -->
+  <script>
+    // 기본값(개발용). 운영에서는 env.js로 window.APP_CONF를 먼저 정의하거나, 아래를 빈 문자열("")로 바꾸세요.
+    window.APP_CONF = window.APP_CONF || {};
+    if (!('API_ORIGIN' in window.APP_CONF)) window.APP_CONF.API_ORIGIN = "http://localhost:8080"; // 배포 프록시면 ""
+    if (!('USER_ID' in window.APP_CONF))    window.APP_CONF.USER_ID    = 1;
+  </script>
+
+  <!-- ✅ 1) 도넛 차트 연동: GET /api/dashboard/donut?userId=&period=YYYY-MM -->
+  <script>
+  (function () {
+    const fmt = new Intl.NumberFormat("ko-KR");
+
+    function getEnv() {
+      try {
+        return JSON.parse(localStorage.getItem("envPrefs.v2") || "{}");
+      } catch (e) {
+        return {};
+      }
+    }
+
+    function buildMockMonthly() {
+      const env = getEnv();
+      let elec = 23000;
+      let gas  = 17000;
+
+      // 주거 형태에 따라 약간 조정
+      switch (env.housing) {
+        case "원룸":
+          elec -= 3000; gas -= 2000; break;
+        case "오피스텔":
+          elec += 2000; gas += 1000; break;
+        case "아파트":
+          elec += 3000; gas += 3000; break;
+      }
+      // 창호에 따라 약간 조정
+      if (env.windows === "단창") {
+        elec += 2000; gas += 1000;
+      } else if (env.windows === "로이/단열") {
+        elec -= 1000; gas -= 500;
+      }
+
+      elec = Math.max(5000, elec);
+      gas  = Math.max(3000, gas);
+      const total = elec + gas;
+      const elecRatio = elec / total;
+      const gasRatio  = gas  / total;
+
+      const now = new Date();
+      const monthLabel = `${now.getMonth() + 1}월`;
+      const periodYm   = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}`;
+
+      const mock = { periodYm, elec, gas, total, elecRatio, gasRatio, monthLabel };
+
+      window.HOME_MOCK = window.HOME_MOCK || {};
+      window.HOME_MOCK.monthly = mock;
+
+      return mock;
+    }
+
+    function render() {
+      const $elecPrice = document.getElementById("elecPrice");
+      const $gasPrice  = document.getElementById("gasPrice");
+      const $total     = document.getElementById("totalPrice");
+      const $donutElec = document.getElementById("donutElec");
+      const $donutGas  = document.getElementById("donutGas");
+      const $month     = document.getElementById("summaryMonth");
+      if (!$elecPrice || !$gasPrice || !$total || !$donutElec || !$donutGas || !$month) return;
+
+      const data = buildMockMonthly();
+
+      $month.textContent       = data.monthLabel;
+      $elecPrice.textContent   = `${fmt.format(data.elec)} 원`;
+      $gasPrice.textContent    = `${fmt.format(data.gas)} 원`;
+      $total.textContent       = `${fmt.format(data.total)} 원`;
+
+      const elecPct = Math.max(0, Math.min(100, Math.round(data.elecRatio * 100)));
+      const gasPct  = Math.max(0, Math.min(100, Math.round(data.gasRatio  * 100)));
+      $donutElec.style.setProperty("--percent", elecPct);
+      $donutGas.style.setProperty("--percent", gasPct);
+    }
+
+    document.addEventListener("DOMContentLoaded", render);
+  })();
+</script>
+
+
+  <!-- ✅ 2) 누적 막대 차트: GET /api/dashboard/bars?userId=&period=YYYY-MM -->
+    <!-- 누적 막대 차트 (현실적인 더미 데이터, 백엔드 호출 X) -->
+  <script>
+    (function () {
+      const container = document.getElementById("chartBars") || document.querySelector(".chart-line");
+      if (!container) return;
+
+      // 상단 카드에 찍힌 예상 전기/가스 요금에서 숫자만 뽑아오기
+      function getMonthlyFromDOM() {
+        const getNum = (id, fallback) => {
+          const el = document.getElementById(id);
+          if (!el) return fallback;
+          const m = el.textContent.replace(/[^\d]/g, "");
+          const n = Number(m || 0);
+          return n > 0 ? n : fallback;
+        };
+        const elec = getNum("elecPrice", 23000);
+        const gas  = getNum("gasPrice", 17000);
+        return { elec, gas, total: elec + gas };
+      }
+
+      // “상식적인” 패턴: 거의 직선에 가까운 증가 + 약간의 굴곡
+      function buildBars() {
+        const { elec, gas } = getMonthlyFromDOM();
+
+        const today = new Date();
+        // 이번 달 실제 일수
+        const daysInMonth = new Date(today.getFullYear(), today.getMonth() + 1, 0).getDate();
+
+        const baseElec = elec / daysInMonth;
+        const baseGas  = gas  / daysInMonth;
+
+        const tmpElecCum = [];
+        const tmpGasCum  = [];
+        let eCum = 0;
+        let gCum = 0;
+
+        for (let day = 1; day <= daysInMonth; day++) {
+          const t = day / daysInMonth;
+
+          // 평일·주말·중반부에 따라 약간씩만 차이를 줌 (0.9 ~ 1.1 정도)
+          const elecFactor =
+            0.95 + 0.1 * Math.sin(t * Math.PI)   // 중간에 살짝 많아짐
+            + (day % 7 === 0 ? 0.03 : 0);        // 주말에 아주 약간 더 사용
+
+          const gasFactor =
+            0.95 + 0.08 * Math.cos(t * Math.PI)  // 초반·후반 약간 차이
+            + (day % 7 === 0 ? 0.02 : 0);        // 주말에 약간 증가
+
+          eCum += baseElec * elecFactor;
+          gCum += baseGas  * gasFactor;
+
+          tmpElecCum.push(eCum);
+          tmpGasCum.push(gCum);
+        }
+
+        // 마지막 날 누적이 정확히 월 예상 요금과 맞도록 스케일링
+        const eScale = elec / (tmpElecCum[tmpElecCum.length - 1] || 1);
+        const gScale = gas  / (tmpGasCum[tmpGasCum.length - 1]  || 1);
+
+        const bars = [];
+        for (let i = 0; i < tmpElecCum.length; i++) {
+          const e = Math.round(tmpElecCum[i] * eScale);
+          const g = Math.round(tmpGasCum[i]  * gScale);
+          bars.push({
+            day: i + 1,
+            elecCum: e,
+            gasCum: g,
+            totalCum: e + g,
+          });
+        }
+        return { periodYm: "", bars };
+      }
+
+      function draw() {
+        const data = buildBars();
+        const bars = data.bars;
+        if (!bars || !bars.length) {
+          container.textContent = "데이터가 없습니다.";
+          return;
+        }
+
+        container.innerHTML = "";
+        const width  = Math.max(240, container.clientWidth || 320);
+        const height = 200;
+        const M = { top: 10, right: 10, bottom: 24, left: 30 };
+        const iw = width - M.left - M.right;
+        const ih = height - M.top - M.bottom;
+
+        const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+        svg.setAttribute("width", width);
+        svg.setAttribute("height", height);
+
+        const maxY = bars.reduce((m, b) => Math.max(m, b.totalCum || 0), 1);
+        const n = bars.length;
+        const slot = iw / n;
+        const barW = Math.max(3, Math.min(20, slot * 0.6));
+        const baseY = height - M.bottom;
+
+        // 배경 그리드
+        const grid = document.createElementNS(svg.namespaceURI, "g");
+        for (let i = 1; i <= 3; i++) {
+          const y = M.top + (ih * i) / 4;
+          const line = document.createElementNS(svg.namespaceURI, "line");
+          line.setAttribute("x1", M.left);
+          line.setAttribute("y1", y);
+          line.setAttribute("x2", width - M.right);
+          line.setAttribute("y2", y);
+          line.setAttribute("stroke", "rgba(0,0,0,.08)");
+          grid.appendChild(line);
+        }
+        svg.appendChild(grid);
+
+        // 막대들 (아래 가스, 위 전기)
+        const barsG = document.createElementNS(svg.namespaceURI, "g");
+        bars.forEach((b, i) => {
+          const xCenter = M.left + i * slot + slot / 2;
+          const x = xCenter - barW / 2;
+
+          const totalH = ih * (Math.max(0, b.totalCum || 0) / maxY);
+          const elecH  = ih * (Math.max(0, b.elecCum || 0) / maxY);
+          const gasH   = Math.max(0, totalH - elecH);
+
+          const rGas = document.createElementNS(svg.namespaceURI, "rect");
+          rGas.setAttribute("x", x);
+          rGas.setAttribute("y", baseY - gasH);
+          rGas.setAttribute("width", barW);
+          rGas.setAttribute("height", gasH);
+          rGas.setAttribute("fill", "#f97316");
+          rGas.setAttribute("rx", "2");
+          barsG.appendChild(rGas);
+
+          const rElec = document.createElementNS(svg.namespaceURI, "rect");
+          rElec.setAttribute("x", x);
+          rElec.setAttribute("y", baseY - totalH);
+          rElec.setAttribute("width", barW);
+          rElec.setAttribute("height", elecH);
+          rElec.setAttribute("fill", "#facc15");
+          rElec.setAttribute("rx", "2");
+          barsG.appendChild(rElec);
+
+          // 1, 5, 10, ... , 마지막 날만 날짜 표시
+          if (b.day === 1 || b.day === bars.length || b.day % 5 === 0) {
+            const t = document.createElementNS(svg.namespaceURI, "text");
+            t.setAttribute("x", xCenter);
+            t.setAttribute("y", baseY + 14);
+            t.setAttribute("text-anchor", "middle");
+            t.setAttribute("font-size", "10");
+            t.setAttribute("fill", "rgba(0,0,0,.55)");
+            t.textContent = b.day;
+            barsG.appendChild(t);
+          }
+        });
+        svg.appendChild(barsG);
+
+        // 범례
+        const lg = document.createElementNS(svg.namespaceURI, "g");
+        [["#facc15", "전기 누적"], ["#f97316", "가스 누적"]].forEach((it, idx) => {
+          const x = width - M.right - 120 + idx * 60;
+          const y = M.top + 10;
+          const box = document.createElementNS(svg.namespaceURI, "rect");
+          box.setAttribute("x", x);
+          box.setAttribute("y", y - 8);
+          box.setAttribute("width", 10);
+          box.setAttribute("height", 10);
+          box.setAttribute("fill", it[0]);
+          box.setAttribute("rx", "2");
+          const tx = document.createElementNS(svg.namespaceURI, "text");
+          tx.setAttribute("x", x + 14);
+          tx.setAttribute("y", y);
+          tx.setAttribute("font-size", "10");
+          tx.textContent = it[1];
+          tx.setAttribute("fill", "rgba(0,0,0,.6)");
+          lg.appendChild(box);
+          lg.appendChild(tx);
+        });
+        svg.appendChild(lg);
+
+        container.appendChild(svg);
+      }
+
+      document.addEventListener("DOMContentLoaded", draw);
+      let t;
+      window.addEventListener("resize", () => {
+        clearTimeout(t);
+        t = setTimeout(draw, 120);
+      });
+    })();
+  </script>
+
+
+
+  <!-- ✅ 3) 절약 목표 저장: POST /api/dashboard/goal  &  조회: GET /api/dashboard/goal -->
+  <script>
+  (function () {
+    const d = document;
+    const form    = d.getElementById("goalForm");
+    const input   = d.getElementById("goalInput");
+    const hintEl  = d.getElementById("goalHint");
+    const pctEl   = d.getElementById("goalPct");
+    const fillEl  = d.getElementById("goalFill");
+    const savedEl = d.getElementById("savedNow");
+    const badge   = d.getElementById("goalSuccess");
+
+    // 상단 요약 영역
+    const totalEl = d.getElementById("totalPrice");
+    const deltaEl = d.getElementById("deltaText");
+    const barJuly = d.getElementById("barJuly");
+    const barAug  = d.getElementById("barAug");
+
+    const fmt = new Intl.NumberFormat("ko-KR");
+    const clamp = (n, min, max) => Math.min(max, Math.max(min, n));
+    const ym = () => {
+      const now = new Date();
+      return now.getFullYear() + "-" + String(now.getMonth() + 1).padStart(2, "0");
+    };
+    const STORAGE_KEY = "homeGoal." + ym();
+
+    function msg(t, err) {
+      if (!hintEl) return;
+      hintEl.textContent = t;
+      hintEl.style.color = err ? "#e11d48" : "";
+    }
+
+    function getMonthlyTotals() {
+      const m = (window.HOME_MOCK && window.HOME_MOCK.monthly) || {};
+      if (m.total && m.elec != null && m.gas != null) return m;
+      const elec = 23000;
+      const gas  = 17000;
+      const total = elec + gas;
+      return { elec, gas, total };
+    }
+
+    function loadState() {
+      try {
+        return JSON.parse(localStorage.getItem(STORAGE_KEY) || "{}");
+      } catch (e) {
+        return {};
+      }
+    }
+    function saveState(st) {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(st));
+    }
+
+    function computeState(goalInput) {
+      const monthly  = getMonthlyTotals();
+      const baseline = Math.round(monthly.total * 1.1); // 지난달이 10% 더 썼다고 가정
+      const current  = Math.round(monthly.total);
+      const target   = Math.max(0, Math.round(Number(goalInput) || 0));
+      const saved    = Math.max(0, baseline - current);
+      const savingPercent = baseline > 0 ? (saved / baseline * 100) : 0;
+      const goalPercent   = target > 0 ? clamp(saved / target * 100, 0, 120) : 0;
+
+      return { target, baseline, current, saved, savingPercent, goalPercent };
+    }
+
+    function renderFromState(st) {
+      const monthly  = getMonthlyTotals();
+      const baseline = Number(st.baseline || Math.round(monthly.total * 1.1));
+      const current  = Number(st.current  || Math.round(monthly.total));
+      const target   = Math.max(0, Number(st.target || 0));
+      const saved    = Math.max(0, Number(st.saved  || Math.max(0, baseline - current)));
+      const goalPercent = clamp(
+        Number(st.goalPercent || (target > 0 ? (saved / target * 100) : 0)),
+        0,
+        120
+      );
+
+      if (input)  input.value = target ? String(target) : "";
+      if (savedEl) savedEl.textContent = `이번 달 절감액: ${fmt.format(saved)} 원`;
+      if (pctEl)   pctEl.textContent   = `${goalPercent.toFixed(1).replace(/\.0$/, "")}%`;
+      if (fillEl)  fillEl.style.width  = `${clamp(goalPercent, 0, 100)}%`;
+      if (badge)   badge.style.display = goalPercent >= 100 ? "block" : "none";
+
+      if (target > 0) {
+        msg(`목표: ${fmt.format(target)} 원 · 남은 금액 ${fmt.format(Math.max(0, target - saved))} 원`, false);
+      } else {
+        msg("목표를 설정해 진행률을 확인해 보세요", false);
+      }
+
+      if (totalEl) totalEl.textContent = `${fmt.format(current)} 원`;
+      if (baseline > 0 && deltaEl) {
+        const diffPct = ((current - baseline) / baseline) * 100;
+        const absPct  = Math.abs(diffPct).toFixed(1);
+        deltaEl.textContent = diffPct <= 0
+          ? `지난달 보다 ${absPct}% 낮은 금액이에요!`
+          : `지난달 보다 ${absPct}% 높은 금액이에요!`;
+      } else if (deltaEl) {
+        deltaEl.textContent = "비교할 지난달 데이터가 없습니다.";
+      }
+
+      if (barJuly && barAug) {
+        const max = Math.max(baseline, current, 1);
+        barJuly.style.width = `${Math.round(baseline / max * 100)}%`;
+        barAug.style.width  = `${Math.round(current  / max * 100)}%`;
+      }
+    }
+
+    function applyFromGoalInput(rawVal) {
+      const st = computeState(rawVal);
+      saveState(st);
+      renderFromState(st);
+    }
+
+    document.addEventListener("DOMContentLoaded", () => {
+      if (!form) return;
+
+      const savedState = loadState();
+      if (savedState && (savedState.target != null)) {
+        renderFromState(savedState);
+      } else {
+        const st = computeState(0);
+        saveState(st);
+        renderFromState(st);
+      }
+
+      form.addEventListener("submit", (e) => {
+        e.preventDefault();
+        const val = Number(input?.value || 0);
+        if (!Number.isFinite(val) || val < 0) {
+          msg("목표 금액을 0 이상 숫자로 입력해 주세요.", true);
+          return;
+        }
+        applyFromGoalInput(val);
+      });
+
+      d.getElementById("goalClear")?.addEventListener("click", () => {
+        const st = computeState(0);
+        st.target = 0;
+        st.goalPercent = 0;
+        saveState(st);
+        if (input) input.value = "";
+        if (badge) badge.style.display = "none";
+        renderFromState(st);
+      });
+    });
+  })();
+</script>
+
+
+</body>
+</html>

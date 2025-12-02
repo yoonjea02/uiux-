@@ -1,0 +1,376 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>AI 분석</title>
+  <link rel="stylesheet" href="style.css" />
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@latest/dist/web/variable/pretendardvariable-dynamic-subset.css" />
+  <script src="env.js"></script>
+  <style>
+    .chart-line { position: relative; min-height: 220px; }
+    .chart-line .chart-empty{ position:absolute; inset:0; display:flex; align-items:center; justify-content:center; color:rgba(0,0,0,.6); font-size:14px; text-align:center; padding:8px; }
+    .chart-line .chart-svg{ width:100%; height:100%; display:block; }
+  </style>
+</head>
+<body data-page="analytics">
+  <div class="wrap">
+    <header>
+      <div class="top-bar">
+        <div class="time">19:31</div>
+        <div class="status" aria-hidden="true"><span>📶</span><span>📡</span><span>🔋</span></div>
+      </div>
+      <div class="top-actions">
+        <a class="btn" href="log.html">로그</a>
+        <div>
+          <a class="icon-btn" href="alerts.html" aria-label="알림">🔔</a>
+          <a class="icon-btn" href="search.html" aria-label="검색">🔎</a>
+          <button class="icon-btn" id="openDrawer" aria-label="전체 메뉴">🧭</button>
+        </div>
+      </div>
+    </header>
+
+    <main class="section stack">
+      <!-- 환경 선택 -->
+      <section class="insight">
+        <h3>그린루틴이 본 @@님은...</h3>
+
+        <form id="envForm" class="env-form" aria-label="생활환경 선택">
+          <label class="env-field">
+            <span class="label">주거형태</span>
+            <select id="envHousing" required>
+              <option value="">선택</option>
+              <option value="원룸">원룸</option>
+              <option value="오피스텔">오피스텔</option>
+              <option value="아파트">아파트</option>
+              <option value="빌라/다가구">빌라/다가구</option>
+            </select>
+          </label>
+
+          <label class="env-field">
+            <span class="label">이중문</span>
+            <select id="envDoors" required>
+              <option value="">선택</option>
+              <option value="있음">있음</option>
+              <option value="없음">없음</option>
+            </select>
+          </label>
+
+          <label class="env-field">
+            <span class="label">창호</span>
+            <select id="envWindows" required>
+              <option value="">선택</option>
+              <option value="단창">단창</option>
+              <option value="이중창">이중창</option>
+              <option value="로이/단열">로이/단열</option>
+            </select>
+          </label>
+
+          <button type="submit" class="btn env-save">저장</button>
+        </form>
+
+        <p id="envSummary" class="small" style="margin-top:6px">
+          선택한 환경을 바탕으로 팁과 분석을 개인화해드려요.
+        </p>
+      </section>
+
+      <!-- 라인차트 -->
+      <section class="panel">
+        <h3>@@님의 하루 에너지 사용량 그래프</h3>
+        <div class="chart-line">라인 차트 영역</div>
+      </section>
+
+      <!-- 맞춤 팁 -->
+      <section class="stack" style="gap:12px">
+        <article class="tip-card">
+          <h4>전기</h4>
+          <ul id="elecTips"><li>불러오는 중…</li></ul>
+        </article>
+        <article class="tip-card">
+          <h4>가스</h4>
+          <ul id="gasTips"><li>불러오는 중…</li></ul>
+        </article>
+      </section>
+    </main>
+
+    <footer>
+      <div class="tabs">
+        <a class="tab" href="index.html" aria-label="홈">홈</a>
+        <a class="tab active" href="analysis.html" aria-label="AI 분석">AI</a>
+        <a class="tab" href="goals.html" aria-label="실시간 요금">요금</a>
+        <a class="tab" href="profile.html" aria-label="마이페이지">마이</a>
+        <button class="tab" id="openDrawer2" type="button" aria-label="전체">전체</button>
+      </div>
+    </footer>
+  </div>
+
+  <div class="scrim" id="scrim"></div>
+  <aside class="drawer" id="drawer" aria-label="전체 메뉴">
+    <div class="d-hero">
+      <div class="d-avatar">👤</div>
+      <div>
+        <div class="d-name">@@님</div>
+        <div class="d-email">aaa123@gmail.com</div>
+      </div>
+    </div>
+
+    <div class="d-grid">
+      <a class="d-btn" href="profile.html"><div class="emoji">👤</div><div class="label">정보 관리</div></a>
+      <a class="d-btn" href="alerts.html"><div class="emoji">🔔</div><div class="label">알림</div></a>
+      <a class="d-btn" href="#"><div class="emoji">📢</div><div class="label">공지사항</div></a>
+      <a class="d-btn" href="profile.html"><div class="emoji">👤</div><div class="label">마이페이지</div></a>
+      <a class="d-btn" href="#"><div class="emoji">💬</div><div class="label">고객센터</div></a>
+      <a class="d-btn" href="search.html"><div class="emoji">🔎</div><div class="label">검색</div></a>
+    </div>
+
+    <div class="d-hr"></div>
+    <div class="d-actions">
+      <a href="#">로그아웃</a>
+      <a href="#">탈퇴하기</a>
+    </div>
+  </aside>
+
+  <!-- 환경 저장(POST /api/ai/preference) + 저장 성공시 팁 GET -->
+    <!-- 환경 저장 + 로컬 개인화 (백엔드 호출 없음 버전) -->
+  <script>
+    (function(){
+      const $ = s => document.querySelector(s);
+      const form = $('#envForm'); if(!form) return;
+      const ho = $('#envHousing'), dr = $('#envDoors'), wi = $('#envWindows');
+      const out = $('#envSummary');
+      const KEY = 'envPrefs.v2';
+
+      function renderSummary(){
+        const h = ho.value || '주거형태 미선택';
+        const d = dr.value || '이중문 미선택';
+        const w = wi.value || '창호 미선택';
+        out.textContent = `${h} / ${d} / ${w} 기준으로 팁과 분석을 보여드려요.`;
+        out.style.color = '';
+      }
+
+      function loadSaved(){
+        try{
+          const saved = JSON.parse(localStorage.getItem(KEY) || '{}');
+          if(saved.housing) ho.value = saved.housing;
+          if(saved.doors)   dr.value = saved.doors;
+          if(saved.windows) wi.value = saved.windows;
+        }catch(e){}
+        renderSummary();
+        // 저장된 값 기준으로 최초 팁/그래프 세팅
+        if(typeof window.updateTipsFromEnv === 'function') window.updateTipsFromEnv();
+        if(typeof window.updateChartFromEnv === 'function') window.updateChartFromEnv();
+      }
+
+      form.addEventListener('submit', (e)=>{
+        e.preventDefault();
+        if(!ho.value || !dr.value || !wi.value){
+          out.textContent = '모든 항목을 선택해 주세요.';
+          out.style.color = '#e11d48';
+          return;
+        }
+        const payload = {
+          housing: ho.value,
+          doors: dr.value,
+          windows: wi.value,
+          ts: Date.now()
+        };
+        localStorage.setItem(KEY, JSON.stringify(payload));
+        renderSummary();
+        out.textContent = '저장 완료! 선택 정보에 맞게 아래 내용이 업데이트 되었어요.';
+
+        if(typeof window.updateTipsFromEnv === 'function') window.updateTipsFromEnv();
+        if(typeof window.updateChartFromEnv === 'function') window.updateChartFromEnv();
+      });
+
+      ['change','input'].forEach(ev =>
+        [ho,dr,wi].forEach(el => el.addEventListener(ev, renderSummary))
+      );
+
+      document.addEventListener('DOMContentLoaded', loadSaved);
+    })();
+  </script>
+
+
+  <!-- 맞춤 팁 조회 (GET /api/ai/tips?userId=&elecCount=&gasCount=) -->
+    <!-- 맞춤 팁 (로컬 생성 버전, 네트워크 호출 없음) -->
+  <script>
+    (function(){
+      const $elec = document.getElementById('elecTips');
+      const $gas  = document.getElementById('gasTips');
+      if(!$elec || !$gas) return;
+
+      function renderList(ul, items){
+        ul.innerHTML = '';
+        (items && items.length ? items : ['내용이 없습니다.']).forEach(t=>{
+          const li = document.createElement('li');
+          li.textContent = String(t);
+          ul.appendChild(li);
+        });
+      }
+
+      function getEnv(){
+        try{
+          return JSON.parse(localStorage.getItem('envPrefs.v2') || '{}');
+        }catch(e){
+          return {};
+        }
+      }
+
+      function buildTips(){
+        const { housing, doors, windows } = getEnv();
+        const elec = [];
+        const gas  = [];
+
+        // 기본 공통 팁
+        elec.push('취침 전에 멀티탭 스위치를 한 번에 OFF 해보세요.');
+        gas.push('보일러 온도를 1~2℃만 낮춰도 난방비를 꽤 줄일 수 있어요.');
+
+        if(housing === '원룸'){
+          elec.push('하루 1시간만 에어컨/전기난로 사용 시간을 줄여도 전기요금이 눈에 띄게 줄어들어요.');
+          gas.push('난방은 짧게 강하게보다, 약하게 오래 돌리는 편이 더 효율적일 수 있어요.');
+        }
+        if(housing === '오피스텔'){
+          elec.push('공용시설이 많은 만큼, 실내 조명과 콘센트 위주로 절약 포인트를 잡아보세요.');
+        }
+        if(doors === '없음'){
+          gas.push('현관 틈새 막이(문풍지)를 붙이면 복도 찬 공기가 덜 들어와 난방비를 줄일 수 있어요.');
+        }
+        if(windows === '단창'){
+          elec.push('창문 틈새를 막거나 뽁뽁이를 붙이면 냉난방 효율이 올라가요.');
+        }
+        if(windows === '로이/단열'){
+          elec.push('단열창이라도 햇볕이 잘 드는 낮에는 커튼을 열어 자연 난방을 이용해보세요.');
+        }
+
+        return { elec, gas };
+      }
+
+      function updateTipsFromEnv(){
+        const { elec, gas } = buildTips();
+        renderList($elec, elec);
+        renderList($gas, gas);
+      }
+
+      window.updateTipsFromEnv = updateTipsFromEnv;
+      document.addEventListener('DOMContentLoaded', updateTipsFromEnv);
+    })();
+  </script>
+
+
+  <!-- 라인차트 (GET /api/ai/daily-line?userId=&date=YYYY-MM-DD), 30초 폴링 -->
+    <!-- 라인차트 (로컬 더미 데이터 버전, 백엔드 X) -->
+  <script>
+    (function(){
+      const container = document.querySelector('.chart-line');
+      if(!container) return;
+
+      function drawChart(labels, elec, gas){
+        container.innerHTML = '';
+        const svgNS = 'http://www.w3.org/2000/svg';
+        const svg = document.createElementNS(svgNS,'svg');
+        svg.classList.add('chart-svg');
+        svg.setAttribute('viewBox','0 0 320 200');
+
+        const maxVal = Math.max(
+          ...elec.map(Number),
+          ...gas.map(Number),
+          1
+        );
+        const stepX = labels.length > 1 ? 280 / (labels.length - 1) : 0;
+        const baseY = 170;
+
+        function toPath(values){
+          return values.map((v,i)=>{
+            const x = 20 + stepX * i;
+            const y = baseY - (Number(v)/maxVal)*120;
+            return (i===0?'M':'L')+x+' '+y;
+          }).join(' ');
+        }
+
+        // x축
+        const axis = document.createElementNS(svgNS,'line');
+        axis.setAttribute('x1','20'); axis.setAttribute('y1',String(baseY));
+        axis.setAttribute('x2','300'); axis.setAttribute('y2',String(baseY));
+        axis.setAttribute('stroke','#e5e7eb'); axis.setAttribute('stroke-width','1');
+        svg.appendChild(axis);
+
+        // 전기 (파란 실선)
+        const pathElec = document.createElementNS(svgNS,'path');
+        pathElec.setAttribute('d', toPath(elec));
+        pathElec.setAttribute('fill','none');
+        pathElec.setAttribute('stroke','#3b82f6');
+        pathElec.setAttribute('stroke-width','2');
+        svg.appendChild(pathElec);
+
+        // 가스 (주황 점선)
+        const pathGas = document.createElementNS(svgNS,'path');
+        pathGas.setAttribute('d', toPath(gas));
+        pathGas.setAttribute('fill','none');
+        pathGas.setAttribute('stroke','#f97316');
+        pathGas.setAttribute('stroke-width','2');
+        pathGas.setAttribute('stroke-dasharray','4 4');
+        svg.appendChild(pathGas);
+
+        container.appendChild(svg);
+      }
+
+      function getEnv(){
+        try{
+          return JSON.parse(localStorage.getItem('envPrefs.v2') || '{}');
+        }catch(e){
+          return {};
+        }
+      }
+
+      function buildData(){
+        const { housing } = getEnv();
+        const labels = ['06시','09시','12시','15시','18시','21시','24시'];
+        let elec, gas;
+
+        if(housing === '원룸'){
+          elec = [0.2,0.4,0.8,0.6,1.0,0.9,0.5];
+          gas  = [0.1,0.2,0.3,0.5,0.8,0.7,0.4];
+        }else if(housing === '오피스텔'){
+          elec = [0.3,0.6,0.9,0.7,1.1,1.0,0.6];
+          gas  = [0.1,0.3,0.4,0.6,0.9,0.8,0.5];
+        }else if(housing === '아파트'){
+          elec = [0.2,0.3,0.6,0.5,0.8,0.7,0.4];
+          gas  = [0.1,0.2,0.3,0.4,0.6,0.5,0.3];
+        }else{
+          // 기본 패턴
+          elec = [0.2,0.3,0.7,0.6,0.9,0.8,0.4];
+          gas  = [0.1,0.2,0.3,0.4,0.7,0.6,0.3];
+        }
+
+        // 보기 좋게 100 단위로 스케일업
+        elec = elec.map(v=>Math.round(v*100));
+        gas  = gas.map(v=>Math.round(v*100));
+        return { labels, elec, gas };
+      }
+
+      function updateChartFromEnv(){
+        const { labels, elec, gas } = buildData();
+        drawChart(labels, elec, gas);
+      }
+
+      window.updateChartFromEnv = updateChartFromEnv;
+      document.addEventListener('DOMContentLoaded', updateChartFromEnv);
+    })();
+  </script>
+
+  <!-- 드로어 토글 -->
+  <script>
+    (function(){
+      const d=document, dr=d.getElementById('drawer'), sc=d.getElementById('scrim');
+      if(!dr||!sc) return;
+      const open=()=>{ dr.classList.add('open'); sc.classList.add('show'); };
+      const close=()=>{ dr.classList.remove('open'); sc.classList.remove('show'); };
+      d.getElementById('openDrawer')?.addEventListener('click', open);
+      d.getElementById('openDrawer2')?.addEventListener('click', open);
+      sc.addEventListener('click', close);
+      d.addEventListener('keydown', e=>{ if(e.key==='Escape') close(); });
+      d.addEventListener('DOMContentLoaded', close);
+    })();
+  </script>
+</body>
+</html>
